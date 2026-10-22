@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { BooksRepository } from '../books/books-repository';
 import { CoversService } from '../books/covers/covers-service';
-import { appConfig } from '../config';
 import { OpenLibraryService } from './open-library-service';
 
 const router = Router();
@@ -38,14 +36,9 @@ router.get('/cover', async (req: Request, res: Response, next: NextFunction) => 
     return next();
   }
 
-  if (!existsSync(appConfig.coversPath)) {
-    mkdirSync(appConfig.coversPath);
-  }
-
   try {
-    CoversService.deleteExisting(book);
     const cover = await OpenLibraryService.fetchCover(coverId as string, size as 'S' | 'M' | 'L');
-    writeFileSync(`${appConfig.coversPath}/${book.md5}.jpg`, Buffer.from(cover));
+    await CoversService.save(book, Buffer.from(cover));
     res.send({ status: 'Cover updated' });
   } catch {
     res.status(404).send('Cover not found');

@@ -86,6 +86,8 @@ KoInsight can be configured using the following environment variables:
   *Default:* `../../../data` or `/app/data` in Docker.
 - `AUTH_USERNAME` / `AUTH_PASSWORD`: Enable HTTP Basic Auth for the web UI and API. Both must be set.<br>
   *Default:* unset (no authentication)
+- `AUTO_FETCH_COVERS`: Automatically fetch a cover from Open Library for books that don't have one. Set to `false` to disable.<br>
+  *Default:* `true`
 
 ## Authentication
 KoInsight has no authentication by default. If you expose it to the internet, set `AUTH_USERNAME` and `AUTH_PASSWORD`.
