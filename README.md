@@ -94,6 +94,8 @@ KoInsight can be configured using the following environment variables:
   *Default:* `100`
 - `DATA_PATH`: Path to the directory where KoInsight data (such as stats or uploads) will be stored.<br>
   *Default:* `../../../data` or `/app/data` in Docker.
+- `AUTO_FETCH_COVERS`: Automatically fetch a cover from Open Library for books that don't have one. Set to `false` to disable.<br>
+  *Default:* `true`
 
 # Usage
 
