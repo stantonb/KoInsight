@@ -25,6 +25,9 @@ RUN mkdir -p /app/data
 COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/apps/server/dist /app/apps/server/dist
 COPY --from=builder /app/apps/web/dist /app/apps/web/dist
+# Shared runtime code imported by the server as @koinsight/common/*
+COPY --from=builder /app/packages/common/package.json /app/packages/common/package.json
+COPY --from=builder /app/packages/common/dist /app/packages/common
 COPY plugins ./plugins
 
 ENV NODE_ENV="production"
