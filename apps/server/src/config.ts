@@ -14,6 +14,7 @@ export const appConfig = {
   env: process.env.NODE_ENV,
 
   coversPath: path.resolve(DATA_PATH, 'covers'),
+  autoFetchCovers: process.env.AUTO_FETCH_COVERS !== 'false',
 
   dataPath: DATA_PATH,
 

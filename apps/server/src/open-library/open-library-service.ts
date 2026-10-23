@@ -7,7 +7,31 @@ const OPEN_LIBRARY_COVERS_API = 'https://covers.openlibrary.org';
 export class OpenLibraryService {
   static async fetchCover(coverId: string, size: 'S' | 'M' | 'L' = 'M') {
     const url = `${OPEN_LIBRARY_COVERS_API}/b/id/${coverId}-${size}.jpg`;
-    return fetch(url).then((response) => response.arrayBuffer());
+    return fetch(url).then((response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch cover ${coverId}: ${response.status}`);
+      }
+      return response.arrayBuffer();
+    });
+  }
+
+  /**
+   * Finds the best matching cover id for a book by title and author.
+   * Returns null if Open Library has no matching book with a cover.
+   */
+  static async findCoverId(title: string, authors?: string | null): Promise<number | null> {
+    const params = new URLSearchParams({ title, limit: '5', fields: 'key,cover_i' });
+    if (authors) {
+      params.set('author', authors);
+    }
+
+    const response = await fetch(`${OPEN_LIBRARY_API}/search.json?${params}`);
+    if (!response.ok) {
+      throw new Error(`Open Library search failed: ${response.status}`);
+    }
+
+    const result: OpenLibrarySearchResult = await response.json();
+    return result.docs.find((doc) => doc.cover_i)?.cover_i ?? null;
   }
 
   static async queryCovers(searchTerm: string, limit: number = 3) {

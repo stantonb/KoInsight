@@ -8,13 +8,13 @@ import { CoversService } from './covers-service';
 const router = Router({ mergeParams: true });
 
 /**
- * Fetches a book cover by book id
+ * Fetches a book cover by book id, auto-fetching one from Open Library if missing
  */
 router.get('/', getBookById, async (req: Request, res: Response) => {
   const book = req.book!;
 
   try {
-    const coverPath = await CoversService.get(book);
+    const coverPath = await CoversService.getOrFetch(book);
     if (coverPath) {
       res.sendFile(coverPath);
     } else {
