@@ -13,6 +13,7 @@ import { JSX } from 'react';
 import { useNavigate } from 'react-router';
 import { API_URL } from '../../api/api';
 import { getBookPath } from '../../routes';
+import { getLatestReadPage } from '../../utils/book-progress';
 
 import style from './books-cards.module.css';
 
@@ -54,7 +55,7 @@ export function BooksCards({ books }: BooksCardsProps): JSX.Element {
           <Progress
             radius={0}
             h={5}
-            value={(book.unique_read_pages / book.total_pages) * 100}
+            value={(getLatestReadPage(book) / book.total_pages) * 100}
             color="koinsight"
           />
           <Box px="lg" className={C(style.CardDetails, { [style.Small]: isSmallScreen })}>
@@ -92,7 +93,7 @@ export function BooksCards({ books }: BooksCardsProps): JSX.Element {
                     <IconProgress stroke={1.5} size={16} />
                   </Tooltip>
                   <span className={style.Attribute}>
-                    {book.unique_read_pages}
+                    {getLatestReadPage(book)}
                     &nbsp;/&nbsp;
                     {book.total_pages} pages read
                   </span>

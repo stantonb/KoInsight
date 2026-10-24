@@ -6,6 +6,7 @@ import { JSX } from 'react';
 import { NavLink } from 'react-router';
 import { API_URL } from '../../api/api';
 import { getBookPath } from '../../routes';
+import { getLatestReadPage } from '../../utils/book-progress';
 import { formatRelativeDate, getDuration, shortDuration } from '../../utils/dates';
 import style from './books-table.module.css';
 
@@ -75,11 +76,11 @@ export function BooksTable({ books }: BooksTableProps): JSX.Element {
               </Flex>
             </Table.Td>
             <Table.Td visibleFrom="md">
-              {book.unique_read_pages}
+              {getLatestReadPage(book)}
               <Progress
-                value={(book.unique_read_pages / book.total_pages) * 100}
+                value={(getLatestReadPage(book) / book.total_pages) * 100}
                 aria-label="Percentage read"
-                aria-valuetext={String((book.unique_read_pages / book.total_pages) * 100)}
+                aria-valuetext={String((getLatestReadPage(book) / book.total_pages) * 100)}
               />
             </Table.Td>
             <Table.Td visibleFrom="md">{book.total_pages}</Table.Td>
