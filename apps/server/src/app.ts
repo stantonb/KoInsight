@@ -12,6 +12,7 @@ import { db } from './knex';
 import { kopluginRouter } from './koplugin/koplugin-router';
 import { kosyncRouter } from './kosync/kosync-router';
 import { openLibraryRouter } from './open-library/open-library-router';
+import { readestRouter } from './readest/readest-router';
 import { statsRouter } from './stats/stats-router';
 import { uploadRouter } from './upload/upload-router';
 
@@ -33,6 +34,9 @@ async function setupServer() {
   }
 
   app.use('/', kosyncRouter); // Needs to be mounted at root to follow KoSync API
+  // Readest's BookOrbit integration speaks KoSync under this prefix, plus its own plugin API
+  app.use('/api/v1/koreader', kosyncRouter);
+  app.use('/api/v1/koreader/plugin', readestRouter);
   app.use('/api/plugin', kopluginRouter);
   app.use('/api/devices', devicesRouter);
   app.use('/api/books', booksRouter);

@@ -66,8 +66,14 @@ describe('basicAuth', () => {
     ['GET', '/users/auth'],
     ['PUT', '/syncs/progress'],
     ['GET', '/syncs/progress/abc123'],
+    ['GET', '/api/v1/koreader/users/auth'],
+    ['PUT', '/api/v1/koreader/syncs/progress'],
+    ['GET', '/api/v1/koreader/syncs/progress/abc123'],
+    ['GET', '/api/v1/koreader/plugin/version'],
+    ['POST', '/api/v1/koreader/plugin/match-check'],
+    ['POST', '/api/v1/koreader/plugin/page-stats'],
   ])('leaves self-authenticated KoSync endpoint %s %s open', async (method, path) => {
-    const response = await request(app)[method.toLowerCase() as 'get' | 'put'](path);
+    const response = await request(app)[method.toLowerCase() as 'get' | 'put' | 'post'](path);
 
     expect(response.status).toBe(200);
   });
@@ -75,6 +81,8 @@ describe('basicAuth', () => {
   it.each([
     ['POST', '/users/create'],
     ['GET', '/syncs/progress'],
+    ['POST', '/api/v1/koreader/users/create'],
+    ['GET', '/api/v1/koreader/syncs/progress'],
   ])('protects KoSync endpoint %s %s that has no auth of its own', async (method, path) => {
     const response = await request(app)[method.toLowerCase() as 'get' | 'post'](path);
 
