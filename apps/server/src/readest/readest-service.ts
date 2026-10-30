@@ -98,12 +98,43 @@ export class ReadestService {
             .merge(['duration', 'total_pages']);
         }
         imported += pageStats.length;
-
-        await this.recomputeBookDevice(trx, hash, device.id);
       }
+
+      await this.removeCopiedEvents(trx, device.id);
     });
 
     return imported;
+  }
+
+  /**
+   * Readest's own cloud sync copies other devices' KOReader stats into its
+   * database, and pushes them back as if they were read on this device. An
+   * event with the same book, page and start second on another device is such
+   * a copy, so drop it here. Sweeping the whole device (not just this batch)
+   * also catches copies that arrived before the other device uploaded.
+   */
+  private static async removeCopiedEvents(trx: Knex.Transaction, deviceId: string) {
+    await trx('page_stat as p')
+      .where('p.device_id', deviceId)
+      .whereExists((qb) =>
+        qb
+          .select(trx.raw('1'))
+          .from('page_stat as o')
+          .whereNot('o.device_id', deviceId)
+          .whereRaw('o.book_md5 = p.book_md5')
+          .whereRaw('o.page = p.page')
+          .whereRaw('o.start_time = p.start_time')
+      )
+      .delete();
+
+    const books = await trx('page_stat')
+      .where({ device_id: deviceId })
+      .union((qb) => qb.select('book_md5').from('book_device').where({ device_id: deviceId }))
+      .distinct('book_md5');
+
+    for (const { book_md5 } of books) {
+      await this.recomputeBookDevice(trx, book_md5, deviceId);
+    }
   }
 
   /** Readest sends no per-book totals, so derive them from its page stats. */
@@ -122,6 +153,11 @@ export class ReadestService {
         trx.raw('COALESCE(MAX(start_time), 0) as last_open')
       )
       .first<{ total_read_time: number; total_read_pages: number; last_open: number }>();
+
+    if (!Number(totals?.total_read_time)) {
+      await trx<BookDevice>('book_device').where(where).delete();
+      return;
+    }
 
     const latest = await trx<PageStat>('page_stat')
       .where(where)

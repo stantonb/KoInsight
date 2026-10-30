@@ -1,6 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import { createBook } from '../db/factories/book-factory';
+import { createDevice } from '../db/factories/device-factory';
 import { createUser } from '../db/factories/user-factory';
 import { db } from '../knex';
 import { readestRouter } from './readest-router';
@@ -111,6 +112,61 @@ describe('readest-router', () => {
       expect(await db('page_stat').where({ book_md5: hash })).toHaveLength(1);
       const bookDevice = await db('book_device').where({ book_md5: hash }).first();
       expect(bookDevice.total_read_time).toBe(30);
+    });
+
+    describe('events copied from another device by Readest sync', () => {
+      const kindleEvent = { page: 1, startTime: 1000, duration: 30, total_pages: 200 };
+
+      const insertKindleEvent = async () => {
+        await createDevice(db, { id: 'kindle', model: 'Kindle' });
+        await db('page_stat').insert({
+          book_md5: hash,
+          device_id: 'kindle',
+          page: kindleEvent.page,
+          start_time: kindleEvent.startTime,
+          duration: kindleEvent.duration,
+          total_pages: kindleEvent.total_pages,
+        });
+      };
+
+      const readestEvents = [
+        { page: 1, startTime: 1000, durationSeconds: 30, totalPages: 200 },
+        { page: 2, startTime: 2000, durationSeconds: 40, totalPages: 200 },
+      ];
+
+      it('drops events another device already reported', async () => {
+        await createBook(db, { md5: hash });
+        await insertKindleEvent();
+
+        await pushStats([{ hash, events: readestEvents }]);
+
+        const stats = await db('page_stat').where({ book_md5: hash, device_id: 'phone-1' });
+        expect(stats).toEqual([expect.objectContaining({ page: 2, start_time: 2000 })]);
+        const bookDevice = await db('book_device')
+          .where({ book_md5: hash, device_id: 'phone-1' })
+          .first();
+        expect(bookDevice.total_read_time).toBe(40);
+      });
+
+      it('removes copies on the next push when the other device uploads later', async () => {
+        await pushStats([{ hash, events: readestEvents }]);
+        await insertKindleEvent();
+
+        await pushStats([]);
+
+        const stats = await db('page_stat').where({ device_id: 'phone-1' });
+        expect(stats).toHaveLength(1);
+        expect(await db('page_stat').where({ device_id: 'kindle' })).toHaveLength(1);
+      });
+
+      it('removes the per-device totals of a book that was only copied', async () => {
+        await createBook(db, { md5: hash });
+        await insertKindleEvent();
+
+        await pushStats([{ hash, events: [readestEvents[0]] }]);
+
+        expect(await db('book_device').where({ device_id: 'phone-1' })).toHaveLength(0);
+      });
     });
 
     it('fills in the title of a placeholder book on a later match-check', async () => {
