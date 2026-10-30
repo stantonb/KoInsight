@@ -5,12 +5,16 @@ type Credentials = { username: string; password: string };
 
 /**
  * KoSync endpoints that authenticate with their own x-auth-user / x-auth-key
- * headers. They are left open so the built-in KOReader progress sync keeps working.
+ * headers. They are left open so the built-in KOReader progress sync keeps working,
+ * at the root and under Readest's BookOrbit prefix (/api/v1/koreader).
  */
 const KOSYNC_SELF_AUTHENTICATED = [
-  { method: 'GET', pattern: /^\/users\/auth\/?$/ },
-  { method: 'PUT', pattern: /^\/syncs\/progress\/?$/ },
-  { method: 'GET', pattern: /^\/syncs\/progress\/[^/]+\/?$/ },
+  { method: 'GET', pattern: /^(\/api\/v1\/koreader)?\/users\/auth\/?$/ },
+  { method: 'PUT', pattern: /^(\/api\/v1\/koreader)?\/syncs\/progress\/?$/ },
+  { method: 'GET', pattern: /^(\/api\/v1\/koreader)?\/syncs\/progress\/[^/]+\/?$/ },
+  { method: 'GET', pattern: /^\/api\/v1\/koreader\/plugin\/version\/?$/ },
+  { method: 'POST', pattern: /^\/api\/v1\/koreader\/plugin\/match-check\/?$/ },
+  { method: 'POST', pattern: /^\/api\/v1\/koreader\/plugin\/page-stats\/?$/ },
 ];
 
 // Hashing first gives equal-length buffers, so the comparison is constant-time
